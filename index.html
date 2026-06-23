@@ -569,12 +569,15 @@
       if (!json.ok) throw new Error(json.error || 'Unknown error');
       return json.data;
     }
-    async function apiPost(action, body) {
-      const res = await fetch(API_URL + '?action=' + action, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(body)
-      });
+    // GET-based save — avoids iOS mobile data blocking cross-origin POSTs
+    async function apiSave(date, split, sets) {
+      const qs = new URLSearchParams({
+        action: 'logWorkout',
+        date,
+        split,
+        sets: JSON.stringify(sets)
+      }).toString();
+      const res = await fetch(API_URL + '?' + qs);
       const json = await res.json();
       if (!json.ok) throw new Error(json.error || 'Unknown error');
       return json.data;
@@ -761,7 +764,7 @@
       status.innerHTML = '';
 
       try {
-        await apiPost('logWorkout', { date: dateStr, split: currentSplit, sets: setsToLog });
+        await apiSave(dateStr, currentSplit, setsToLog);
         status.innerHTML = `<div class="status success">Logged ${setsToLog.length} sets ✓</div>`;
         btn.textContent = 'Logged ✓';
         setTimeout(() => {
